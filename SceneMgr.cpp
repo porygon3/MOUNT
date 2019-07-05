@@ -4,6 +4,7 @@
 #include "Title.h"
 #include "Jacket.h"
 #include "Result.h"
+#include "Unlock.h"
 #include "SceneMgr.h"
 
 SceneMgr::SceneMgr(){
@@ -39,6 +40,9 @@ void SceneMgr::ChangeScene() {
 	case eScene::eScene_Select:
 		scene = new Select();
 		break;
+		case eScene::eScene_Unlock:
+		scene = new Unlock();
+		break;
 	case eScene::eScene_Jacket:
 		scene = new Jacket();
 		break;
@@ -49,7 +53,7 @@ void SceneMgr::ChangeScene() {
 		scene = new Result();
 		break;
 	default:
-		assert(false);
+		assert(0);
 		break;
 	}
 	Initialize();

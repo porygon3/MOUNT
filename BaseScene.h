@@ -4,22 +4,47 @@
 #include "ISceneChanger.h"
 #include "Keyboard.h"
 
-extern int counter; // フェードカウンタ
-extern bool fade_flag; // フェードアウトするのかフェードインするのかの判別
+#define SelectNum 6 //ジャケット数も同様
+#define Difficult 4
+#define LEVEL 4
+
+#define Other 10
+#define SENum 3
+#define FPattern 3
+
+#define Illum 255
+
+extern int timer;
+
+// フェードカウンタ
+extern int counter;
+//フェードフラグ
+extern bool fade_flag;
+
+// フラッシュカウンタ
+extern int counter2;
+//フラッシュフラグ
+extern bool flash_flag;
+
+//選曲移動用フラグ
 extern bool up_flag;
 extern bool down_flag;
 
+//難易度移動用フラグ
 extern bool difup_flag;
 extern bool difdown_flag;
 
 
-typedef struct {   //構造体を宣言
+//要所で表示する曲情報の構造体
+typedef struct {
 	int x, y; // 座標
 	char name[256]; // 項目
 
 	int bpm;
-	int level[4];
+	int level[LEVEL];
+	int point[LEVEL];
 
+	//曲の情報を作成
 	void SMake(int _x, int _y,int _bpm, char _name[256], int a, int b, int c, int d){
 		x = _x;
 		y = _y;
@@ -27,10 +52,18 @@ typedef struct {   //構造体を宣言
 		for (int i = 0; i < 256; i++){
 			name[i] = _name[i];
 		}
+
 		level[0] = a;
 		level[1] = b;
 		level[2] = c;
 		level[3] = d;
+
+		//解禁に必要なエネルギー(難易度の10倍)
+		for (int i = 0; i < LEVEL; i++) {
+			point[i] = level[i] * 10;
+		}
+
+
 	}
 
 	void DMake(int _x, int _y, char _name[256]) {
@@ -41,7 +74,6 @@ typedef struct {   //構造体を宣言
 		}
 		
 	}
-
 
 	void Add() {
 		x -= 1;
@@ -70,18 +102,43 @@ class BaseScene : public Master {  //Masterのメンバを継承
 protected:
 	int mImageHandle;
 	int mSoundHandle;
-	int Jacketimg[6];
-	int Otherimg[10];
-	int Music[6];
-	int SE[3];
+	int Jacketimg[SelectNum];
+	int Otherimg[Other];
+	int Music[SelectNum];
+	int SE[SENum];
 	int tennmetu;
-	static int CSelectNum; //staticメンバ変数
+	int fsHandle[FPattern];
+
+
+	static int CSelectNum;
 	static int DSelectNum;
 	static int great_count, ok_count, bad_count;
-	static int highscore[6][4],score[6][4];
-	static int clear_flag[6][4];
-	static int unlock_flag[6][4];
+	static int highscore[SelectNum][Difficult],score[SelectNum][Difficult];
+	static int clear_flag[SelectNum][Difficult];
+	static int unlock_flag[SelectNum][Difficult];
+	static int GaugeEnergie;
 	static eScene NowScene;
+
+	//フェードアウト用関数
+	void Fadeout() {
+		if (counter < Illum){
+			//フェードアウト用の黒い長方形
+			SetDrawBlendMode(DX_BLENDMODE_ALPHA, Illum - counter);
+			DrawBox(0, 0, 1920, 1080, 0x000000, true);
+			SetDrawBlendMode(DX_BLENDMODE_NOBLEND, Illum);
+		}
+	}
+
+	void Flash() {
+		if (counter2 < Illum) {
+			//フラッシュ用の黒い長方形
+			SetDrawBlendMode(DX_BLENDMODE_ALPHA, Illum - counter2);
+			DrawBox(0, 0, 1920, 1080, 0xffffff, true);
+			SetDrawBlendMode(DX_BLENDMODE_NOBLEND, Illum);
+		}
+	}
+
+
 public:
 	BaseScene();
 	virtual  ~BaseScene() {};

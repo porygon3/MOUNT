@@ -1,83 +1,100 @@
 #include "Game.h"
 #include "DxLib.h"
 #include <stdio.h>
-#include <deque>
 
-#include <fstream>
-#include <iostream>
-#include <string>
+using namespace std;
 
+//コンストラクタ--------------------------------------------------------------------------
 Game::Game() : BaseScene() {
 
-	std::string text_name;
-	text_name = "譜面/test"+std::to_string(CSelectNum)+"," + std::to_string(DSelectNum) + ".txt";
+	Initialize();
+
+	SelectTitle[0].SMake(1350, 800, 280, "ハイスピ2000", 1, 2, 4, 6);  //5つの構造体に中身を与える
+	SelectTitle[1].SMake(1350, 800, 160, "Heaven helps you", 1, 3, 5, 7);
+	SelectTitle[2].SMake(1350, 800, 250, "UN Equald", 3, 5, 7, 9);
+	SelectTitle[3].SMake(1350, 800, 178, "Gear", 2, 4, 6, 8);
+	SelectTitle[4].SMake(1350, 800, 165, "INVASION", 3, 5, 7, 10);
+	SelectTitle[5].SMake(1350, 800, 0, "----------EXIT----------", 0, 0, 0, 0);
+
+	string text_name;
+	text_name = "譜面/test" + to_string(CSelectNum) + "," + to_string(DSelectNum) + ".txt";
 
 
 	//ファイル読み込み
-	std::ifstream n_file(text_name);
-	std::string str;
-
-
-	getline(n_file, str); //タイトルなどを読み込み
-	f_title = str;
-	getline(n_file, str);
-	f_bpm = str;
-	BPM = std::stoi(f_bpm);
-	getline(n_file, str);
-	f_beat = str;
-	Beat = std::stoi(f_beat);
-	getline(n_file, str);
-	f_speed = str;
-	Speed = std::stoi(f_speed);
-	
-	notescount = 0;
-	int Y_num = 0;
-	while (getline(n_file, str)) {
-		for (int i = 0; i < 5; i++) {
-
-			if (str[i] != '0') {
-				Notes[i].push_back(NotesBase());	//0のとき、何もない空で間を埋める。
-
-				switch (str[i]) {
-				case '1':
-					//Notes[i][(signed)Notes[i].size() - 1].Init(711 + 76 * i, -Y_num * Speed * ((60.0 / BPM) / (Beat / 4)), 1);    リファレンスによって座標が違う
-					Notes[i][(signed)Notes[i].size() - 1].Init(674 + 76 * i, -Y_num * Speed * ((60.0 / BPM) / (Beat / 4)), 1);
-					//((60.0 / BPM) / Beat)
-					break;
-				case '2':
-					Notes[i][(signed)Notes[i].size() - 1].Init(674 + 76 * i, -Y_num * Speed * ((60.0 / BPM) / (Beat / 4)), 2);
-					break;
-				case '3':
-					Notes[i][(signed)Notes[i].size() - 1].Init(674 + 76 * i, -Y_num * Speed * ((60.0 / BPM) / (Beat / 4)), 3);
-					break;
-				case '4':
-					Notes[i][(signed)Notes[i].size() - 1].Init(674 + 76 * i, -Y_num * Speed * ((60.0 / BPM) / (Beat / 4)), 4);
-					break;
-				case '5':
-					Notes[i][(signed)Notes[i].size() - 1].Init(674 + 76 * i, -Y_num * Speed * ((60.0 / BPM) / (Beat / 4)), 5);
-					break;
-				case '6':
-					Notes[i][(signed)Notes[i].size() - 1].Init(674 + 76 * i, -Y_num * Speed * ((60.0 / BPM) / (Beat / 4)), 6);
-					break;
-				default:
-					break;
-				}
-				if (i < 4) {
-					notescount++;
-				}
-
-			}
-		}
-		Y_num++;
+	ifstream n_file(text_name);
+	if (n_file.fail()) {	// ファイル読み込み失敗
+		DxLib_End();
 	}
-	for (int j = 0; j < Notes.size(); j++) {Notes[j].resize(Notes[j].size() + 1);}
+	else {
+		string str;
+
+		//タイトルなどの読み込み
+		getline(n_file, str);
+		f_title = str;
+		getline(n_file, str);
+		f_bpm = str;
+		BPM = stoi(f_bpm);
+		getline(n_file, str);
+		f_beat = str;
+		Beat = stoi(f_beat);
+		getline(n_file, str);
+		f_speed = str;
+		Speed = stoi(f_speed);
+
+		notescount = 0.0;
+		int Y_num = 0;
+		while (getline(n_file, str)) {
+			for (int i = 0; i < LANE + 1; i++) {
+
+				if (str[i] != '0') {
+					Notes[i].push_back(NotesBase());	//0のとき、何もない空で間を埋める。(何も与えない)
+
+					//テキストの数字によってノーツの初期座標と種類を与える
+					switch (str[i]) {
+					case '1':
+						//Notes[i][(signed)Notes[i].size() - 1].Init(711 + 76 * i, -Y_num * Speed * ((60.0 / BPM) / (Beat / 4)), 1);    リファレンスによって座標が違う
+						//Notes[i][(signed)Notes[i].size() - 1].Init(674 + 76 * i, -Y_num * Speed * ((60.0 / BPM) / (Beat / 4)), 2);
+						Notes[i][(signed)Notes[i].size() - 1].Init(NotesX(i), NotesY(-Y_num), 1);
+						break;
+					case '2':
+						Notes[i][(signed)Notes[i].size() - 1].Init(NotesX(i), NotesY(-Y_num), 2);
+						break;
+					case '3':
+						Notes[i][(signed)Notes[i].size() - 1].Init(NotesX(i), NotesY(-Y_num), 3);
+						break;
+					case '4':
+						Notes[i][(signed)Notes[i].size() - 1].Init(NotesX(i), NotesY(-Y_num), 4);
+						break;
+					case '5':
+						Notes[i][(signed)Notes[i].size() - 1].Init(NotesX(i), NotesY(-Y_num), 5);
+						break;
+					case '6':
+						Notes[i][(signed)Notes[i].size() - 1].Init(NotesX(i), NotesY(-Y_num), 6);
+						break;
+					default:
+						break;
+					}
+
+					//5レーン目を除く譜面中のノーツ数をカウント
+					if (i < LANE) {
+						notescount++;
+					}
+
+				}
+			}
+			Y_num++;
+		}
+		for (int j = 0; j < Notes.size(); j++) { Notes[j].resize(Notes[j].size() + 1); }
+	}
 }
+
+//デストラクタ--------------------------------------------------------------------------
 Game::~Game() {
-	
+	Finalize();
 }
 
 
-//初期化
+//初期化--------------------------------------------------------------------------
 void Game::Initialize() {
 	mImageHandle = LoadGraph("画像/画面/start.png");
 
@@ -98,24 +115,35 @@ void Game::Initialize() {
 	Notesimg[3] = LoadGraph("画像/Notes/ロングノーツ1.png");
 	Notesimg[4] = LoadGraph("画像/Notes/ロングノーツ2.png");
 	Notesimg[5] = LoadGraph("画像/Notes/ロングノーツ3.png");
+	Notesimg[6] = LoadGraph("画像/Notes/ノーツef.png");
 
 	Jacketimg[0] = LoadGraph("画像/ジャケット/selectA.png");
 	Jacketimg[1] = LoadGraph("画像/ジャケット/hellnear.png");
 	Jacketimg[2] = LoadGraph("画像/ジャケット/unequald_j.png");
 	Jacketimg[3] = LoadGraph("画像/ジャケット/selectD.png");
 	Jacketimg[4] = LoadGraph("画像/ジャケット/select2.png");
-	Jacketimg[5] = LoadGraph("画像/ジャケット/select2.png");
+	Jacketimg[5] = 0;
 	
+	Music[0] = LoadSoundMem("音/曲/ﾕｳﾃﾗｳﾁ（声もﾕｳﾃﾗｳﾁ）.wav");
 	Music[1] = LoadSoundMem("音/曲/ﾕｳﾃﾗｳﾁ（声もﾕｳﾃﾗｳﾁ）.wav");
+	Music[2] = 0;
+	Music[3] = 0;
+	Music[4] = 0;
+	Music[5] = 0;
 
-	NowTime = 0.0;
-	OldTime = 0.0;
+	NowTime = 0.0;  //現在の時間
+	OldTime = 0.0;  //一つ前の時間
+	linedowner = 0.0;
 
-	starttime = 200;
-	endtime = 200;
+	//待機時間
+	starttime = 300;
+	endtime = 300;
 
+	//背景の照明時間
 	rightcount = 255;
-	for (int i = 0; i < 4; i++) {
+
+
+	for (int i = 0; i < LANE; i++) {
 		keyrightcount[i] = 255;
 		judge_great[i] = 0, judge_ok[i] = 0, judge_bad[i] = 0;
 	}
@@ -125,28 +153,40 @@ void Game::Initialize() {
 	gaugecount = 0.0;
 }
 
+//メモリ開放--------------------------------------------------------------------------
 void Game::Finalize() {
 	//画像削除
 	DeleteGraph(mImageHandle);
-	for (int i = 0; i < 5; i++) {
+
+	//ノーツ画像削除
+	for (int i = 0; i < NOTESIMG; i++) {
 		DeleteGraph(Notesimg[i]);
 	}
-	for (int i = 0; i < 9; i++) {
+
+	//画面パーツ削除
+	for (int i = 0; i < Other; i++) {
 		DeleteGraph(Otherimg[i]);
 	}
-	for (int i = 0; i < 6; i++) {
+
+	//ジャケット削除
+	for (int i = 0; i < SelectNum; i++) {
 		DeleteGraph(Jacketimg[i]);
 	}
-
+	//音楽削除
+	for (int i = 0; i < SelectNum; i++) {
+		DeleteSoundMem(Music[i]);
+	}
 
 	//ノーツ削除
 	Notes[0].clear();
 	Notes[0].shrink_to_fit();
 }
 
-//更新
+
+//更新--------------------------------------------------------------------------
+
 void Game::Update() {
-	if (counter < 255 && fade_flag == false) {  //最初のフェードイン
+	if (counter < Illum && fade_flag == false) {  //最初のフェードイン
 		counter = counter + 5;
 	}
 	else if (counter > 0 && fade_flag == true) { //切り替わりのフェードアウト
@@ -154,21 +194,27 @@ void Game::Update() {
 	}
 
 
-
+	//画面移行
 	if (CheckHitKey(KEY_INPUT_RETURN) != 0) {
 		StopSoundMem(Music[1]);
 		fade_flag = true;
 	}
 
-	if (counter == 0 && fade_flag == true) { //ここでフェードアウトで真っ暗のときにシーンを替える
+	//フェードアウトで真っ暗のときにシーンを替える
+	if (counter == 0 && fade_flag == true) {
+
+		GaugeCharge();
+
 		BaseScene::NowScene = eScene::eScene_Result;
 	}
 
-	
+	//背景の照明時間
 	if (rightcount > 0) { 
 		rightcount = rightcount - 15;
 	}
-	for (int i = 0; i < 4; i++) {
+
+	//キーライトの表示時間
+	for (int i = 0; i < LANE; i++) {
 		if (keyrightcount[i] > 0) {
 			keyrightcount[i] = keyrightcount[i] - 15;
 		}
@@ -177,6 +223,7 @@ void Game::Update() {
 		judge_bad[i]--;
 	}
 
+	//時間を取得
 	if (start_flag == true) {
 		StartTime = GetNowHiPerformanceCount();
 		OldTime = StartTime;
@@ -187,24 +234,27 @@ void Game::Update() {
 		OldTime = NowTime;
 	}
 
-
+	//時間を取得
 	NowTime = GetNowHiPerformanceCount();
 	difference = (double)(NowTime - OldTime);
 
-	
-	//落とす処理
+	//落下処理
 	if (starttime == 0) {
 		for (int i = 0, n = (signed)Notes.size(); i < n; i++) {
-			if (!Notes[i].empty()) {
-				for (int j = 0, m = Notes[i].size(); j < m; j++) {
-					Notes[i][j].Down(difference, Speed);
-				}
+			if (!Notes[i].empty() == false) { continue; }      
+			
+			//ノーツがあるとき
+			for (int j = 0, m = Notes[i].size(); j < m; j++) {
+				Notes[i][j].Down(difference, Speed);
 			}
 		}
 	}
+
+	//譜面が落下するまでの待機時間を進める
 	if (starttime > 0) {
 		starttime--;
 	}
+
 	//終了判定
 	if (endtime == 0) {
 		fade_flag = true;
@@ -216,377 +266,116 @@ void Game::Update() {
 
 	//判定
 	if (Notes[0][0].NotesColor == 1) {
-		if (Keyboard::GetKey(KEY_INPUT_V) == 1) { //F
-			if (!Notes[0].empty()) {
-				if (Notes[0][0].y >= 916.0 - (Speed / 100) && Notes[0][0].y <= 956.0 + (Speed / 100)) {
-					Great(0,Notes[0][0].NotesColor);
-					Linedelete(0);
-				}
-				else if (Notes[0][0].y >= 896.0 - (Speed / 100) && Notes[0][0].y <= 976.0 + (Speed / 100)) {
-					Ok(0);
-					Linedelete(0);
-				}
-				else if (Notes[0][0].y >= 876.0 - (Speed / 100) && Notes[0][0].y <= 996.0 + (Speed / 100)) {
-					Bad(0);
-					Linedelete(0);
-				}
-			}
-		}
+		if (Keyboard::GetKey(KEY_INPUT_V) == 1) Judgement(0);
 	}
-	else if (Notes[0][0].NotesColor == 2){
-		if (Keyboard::GetKey(KEY_INPUT_F) == 1) { //F
-			if (!Notes[0].empty()) {
-				if (Notes[0][0].y >= 916.0 - (Speed / 100) && Notes[0][0].y <= 956.0 + (Speed / 100)) {
-					Great(0,Notes[0][0].NotesColor);
-					Linedelete(0);
-				}
-				else if (Notes[0][0].y >= 896.0 - (Speed / 100) && Notes[0][0].y <= 976.0 + (Speed / 100)) {
-					Ok(0);
-					Linedelete(0);
-				}
-				else if (Notes[0][0].y >= 876.0 - (Speed / 100) && Notes[0][0].y <= 996.0 + (Speed / 100)) {
-					Bad(0);
-					Linedelete(0);
-				}
-			}
-		}
+	if (Notes[0][0].NotesColor == 2){
+		if (Keyboard::GetKey(KEY_INPUT_F) == 1) Judgement(0);
 	}
-	else if (Notes[0][0].NotesColor == 3) {
-		if (Keyboard::GetKey(KEY_INPUT_R) == 1) { //F
-			if (!Notes[0].empty()) {
-				if (Notes[0][0].y >= 916.0 - (Speed / 100) && Notes[0][0].y <= 956.0 + (Speed / 100)) {
-					Great(0,Notes[0][0].NotesColor);
-					Linedelete(0);
-				}
-				else if (Notes[0][0].y >= 896.0 - (Speed / 100) && Notes[0][0].y <= 976.0 + (Speed / 100)) {
-					Ok(0);
-					Linedelete(0);
-				}
-				else if (Notes[0][0].y >= 876.0 - (Speed / 100) && Notes[0][0].y <= 996.0 + (Speed / 100)) {
-					Bad(0);
-					Linedelete(0);
-				}
-			}
-		}
+	if (Notes[0][0].NotesColor == 3) {
+		if (Keyboard::GetKey(KEY_INPUT_R) == 1) Judgement(0);
 	}
-	else if (Notes[0][0].NotesColor == 4) {
-		if (CheckHitKey(KEY_INPUT_V) == 1) { //F
-			if (!Notes[0].empty()) {
-				if (Notes[0][0].y >= 916.0 - (Speed / 100) && Notes[0][0].y <= 956.0 + (Speed / 100)) {
-					Great(0,Notes[0][0].NotesColor);
-					Linedelete(0);
-				}
-			}
-		}
+	if (Notes[0][0].NotesColor == 4) {
+		if (CheckHitKey(KEY_INPUT_V) == 1) LongJudgement(0);
 	}
-	else if (Notes[0][0].NotesColor == 5) {
-		if (CheckHitKey(KEY_INPUT_F) == 1) { //F
-			if (!Notes[0].empty()) {
-				if (Notes[0][0].y >= 916.0 - (Speed / 100) && Notes[0][0].y <= 956.0 + (Speed / 100)) {
-					Great(0,Notes[0][0].NotesColor);
-					Linedelete(0);
-				}
-			}
-		}
+	if (Notes[0][0].NotesColor == 5) {
+		if (CheckHitKey(KEY_INPUT_F) == 1) LongJudgement(0);
 	}
-	else if (Notes[0][0].NotesColor == 6) {
-		if (CheckHitKey(KEY_INPUT_R) == 1) { //F
-			if (!Notes[0].empty()) {
-				if (Notes[0][0].y >= 916.0 - (Speed / 100) && Notes[0][0].y <= 956.0 + (Speed / 100)) {
-					Great(0,Notes[0][0].NotesColor);
-					Linedelete(0);
-				}
-			}
-		}
+	if (Notes[0][0].NotesColor == 6) {
+		if (CheckHitKey(KEY_INPUT_R) == 1) LongJudgement(0);
 	}
 
 
 	if (Notes[1][0].NotesColor == 1) {
-		if (Keyboard::GetKey(KEY_INPUT_B) == 1) { //G
-			if (!Notes[1].empty()) {
-				if (Notes[1][0].y >= 916 - (Speed / 100) && Notes[1][0].y <= 956 + (Speed / 100) && Notes[1][0].NotesColor == 1) {
-					Great(1,Notes[1][0].NotesColor);
-					Linedelete(1);
-				}
-				else if (Notes[1][0].y >= 896.0 - (Speed / 100) && Notes[1][0].y <= 976.0 + (Speed / 100)) {
-					Ok(1);
-					Linedelete(1);
-				}
-				else if (Notes[1][0].y >= 876.0 - (Speed / 100) && Notes[1][0].y <= 996.0 + (Speed / 100)) {
-					Bad(1);
-					Linedelete(1);
-				}
-			}
-		}
+		if (Keyboard::GetKey(KEY_INPUT_B) == 1) Judgement(1);
 	}
-	else if (Notes[1][0].NotesColor == 2) {
-		if (Keyboard::GetKey(KEY_INPUT_G) == 1) { //G
-			if (!Notes[1].empty()) {
-				if (Notes[1][0].y >= 916 - (Speed / 100) && Notes[1][0].y <= 956 + (Speed / 100) && Notes[1][0].NotesColor == 1) {
-					Great(1,Notes[1][0].NotesColor);
-					Linedelete(1);
-				}
-				else if (Notes[1][0].y >= 896.0 - (Speed / 100) && Notes[1][0].y <= 976.0 + (Speed / 100)) {
-					Ok(1);
-					Linedelete(1);
-				}
-				else if (Notes[1][0].y >= 876.0 - (Speed / 100) && Notes[1][0].y <= 996.0 + (Speed / 100)) {
-					Bad(1);
-					Linedelete(1);
-				}
-			}
-		}
+	if (Notes[1][0].NotesColor == 2) {
+		if (Keyboard::GetKey(KEY_INPUT_G) == 1) Judgement(1);
 	}
-	else if (Notes[1][0].NotesColor == 3) {
-		if (Keyboard::GetKey(KEY_INPUT_T) == 1) { //G
-			if (!Notes[1].empty()) {
-				if (Notes[1][0].y >= 916 - (Speed / 100) && Notes[1][0].y <= 956 + (Speed / 100) && Notes[1][0].NotesColor == 1) {
-					Great(1,Notes[1][0].NotesColor);
-					Linedelete(1);
-				}
-				else if (Notes[1][0].y >= 896.0 - (Speed / 100) && Notes[1][0].y <= 976.0 + (Speed / 100)) {
-					Ok(1);
-					Linedelete(1);
-				}
-				else if (Notes[1][0].y >= 876.0 - (Speed / 100) && Notes[1][0].y <= 996.0 + (Speed / 100)) {
-					Bad(1);
-					Linedelete(1);
-				}
-			}
-		}
+	if (Notes[1][0].NotesColor == 3) {
+		if (Keyboard::GetKey(KEY_INPUT_T) == 1) Judgement(1);
 	}
-	else if (Notes[1][0].NotesColor == 4) {
-		if (CheckHitKey(KEY_INPUT_B) == 1) { //F
-			if (!Notes[0].empty()) {
-				if (Notes[1][0].y >= 916.0 - (Speed / 100) && Notes[1][0].y <= 956.0 + (Speed / 100)) {
-					Great(1,Notes[1][0].NotesColor);
-					Linedelete(1);
-				}
-			}
-		}
+	if (Notes[1][0].NotesColor == 4) {
+		if (CheckHitKey(KEY_INPUT_B) == 1) LongJudgement(1);
 	}
-	else if (Notes[1][0].NotesColor == 5) {
-		if (CheckHitKey(KEY_INPUT_G) == 1) { //F
-			if (!Notes[0].empty()) {
-				if (Notes[1][0].y >= 916.0 - (Speed / 100) && Notes[1][0].y <= 956.0 + (Speed / 100)) {
-					Great(1,Notes[1][0].NotesColor);
-					Linedelete(1);
-				}
-			}
-		}
+	if (Notes[1][0].NotesColor == 5) {
+		if (CheckHitKey(KEY_INPUT_G) == 1) LongJudgement(1);
 	}
-	else if (Notes[1][0].NotesColor == 6) {
-		if (CheckHitKey(KEY_INPUT_T) == 1) { //F
-			if (!Notes[0].empty()) {
-				if (Notes[1][0].y >= 916.0 - (Speed / 100) && Notes[1][0].y <= 956.0 + (Speed / 100)) {
-					Great(1,Notes[1][0].NotesColor);
-					Linedelete(0);
-				}
-			}
-		}
+	if (Notes[1][0].NotesColor == 6) {
+		if (CheckHitKey(KEY_INPUT_T) == 1) LongJudgement(1);
 	}
 
 	if (Notes[2][0].NotesColor == 1) {
-		if (Keyboard::GetKey(KEY_INPUT_N) == 1) { //H
-			if (!Notes[2].empty()) {
-				if (Notes[2][0].y >= 916 - (Speed / 100) && Notes[2][0].y <= 956 + (Speed / 100)) {
-					Great(2,Notes[2][0].NotesColor);
-					Linedelete(2);
-				}
-				else if (Notes[2][0].y >= 896.0 - (Speed / 100) && Notes[2][0].y <= 976.0 + (Speed / 100)) {
-					Ok(2);
-					Linedelete(2);
-				}
-				else if (Notes[2][0].y >= 876.0 - (Speed / 100) && Notes[2][0].y <= 996.0 + (Speed / 100)) {
-					Bad(2);
-					Linedelete(2);
-				}
-			}
-		}
+		if (Keyboard::GetKey(KEY_INPUT_N) == 1) Judgement(2);
 	}
-	else if (Notes[2][0].NotesColor == 2) {
-		if (Keyboard::GetKey(KEY_INPUT_H) == 1) { //H
-			if (!Notes[2].empty()) {
-				if (Notes[2][0].y >= 916 - (Speed / 100) && Notes[2][0].y <= 956 + (Speed / 100)) {
-					Great(2,Notes[2][0].NotesColor);
-					Linedelete(2);
-				}
-				else if (Notes[2][0].y >= 896.0 - (Speed / 100) && Notes[2][0].y <= 976.0 + (Speed / 100)) {
-					Ok(2);
-					Linedelete(2);
-				}
-				else if (Notes[2][0].y >= 876.0 - (Speed / 100) && Notes[2][0].y <= 996.0 + (Speed / 100)) {
-					Bad(2);
-					Linedelete(2);
-				}
-			}
-		}
+	if (Notes[2][0].NotesColor == 2) {
+		if (Keyboard::GetKey(KEY_INPUT_H) == 1) Judgement(2);
 	}
-	else if (Notes[2][0].NotesColor == 3) {
-		if (Keyboard::GetKey(KEY_INPUT_Y) == 1) { //H
-			if (!Notes[2].empty()) {
-				if (Notes[2][0].y >= 916 - (Speed / 100) && Notes[2][0].y <= 956 + (Speed / 100)) {
-					Great(2,Notes[2][0].NotesColor);
-					Linedelete(2);
-				}
-				else if (Notes[2][0].y >= 896.0 - (Speed / 100) && Notes[2][0].y <= 976.0 + (Speed / 100)) {
-					Ok(2);
-					Linedelete(2);
-				}
-				else if (Notes[2][0].y >= 876.0 - (Speed / 100) && Notes[2][0].y <= 996.0 + (Speed / 100)) {
-					Bad(2);
-					Linedelete(2);
-				}
-			}
-		}
+	if (Notes[2][0].NotesColor == 3) {
+		if (Keyboard::GetKey(KEY_INPUT_Y) == 1) Judgement(2);
 	}
-	else if (Notes[2][0].NotesColor == 4) {
-		if (CheckHitKey(KEY_INPUT_N) == 1) { //F
-			if (!Notes[0].empty()) {
-				if (Notes[2][0].y >= 916.0 - (Speed / 100) && Notes[2][0].y <= 956.0 + (Speed / 100)) {
-					Great(2,Notes[2][0].NotesColor);
-					Linedelete(2);
-				}
-			}
-		}
+	if (Notes[2][0].NotesColor == 4) {
+		if (CheckHitKey(KEY_INPUT_N) == 1) LongJudgement(2);
 	}
-	else if (Notes[2][0].NotesColor == 5) {
-		if (CheckHitKey(KEY_INPUT_H) == 1) { //F
-			if (!Notes[0].empty()) {
-				if (Notes[2][0].y >= 916.0 - (Speed / 100) && Notes[2][0].y <= 956.0 + (Speed / 100)) {
-					Great(2,Notes[2][0].NotesColor);
-					Linedelete(2);
-				}
-			}
-		}
+	if (Notes[2][0].NotesColor == 5) {
+		if (CheckHitKey(KEY_INPUT_H) == 1) LongJudgement(2);
 	}
-	else if (Notes[2][0].NotesColor == 6) {
-		if (CheckHitKey(KEY_INPUT_Y) == 1) { //F
-			if (!Notes[0].empty()) {
-				if (Notes[2][0].y >= 916.0 - (Speed / 100) && Notes[2][0].y <= 956.0 + (Speed / 100)) {
-					Great(2,Notes[2][0].NotesColor);
-					Linedelete(2);
-				}
-			}
-		}
+	if (Notes[2][0].NotesColor == 6) {
+		if (CheckHitKey(KEY_INPUT_Y) == 1) LongJudgement(2);
 	}
 
 	if (Notes[3][0].NotesColor == 1) {
-		if (Keyboard::GetKey(KEY_INPUT_M) == 1) { //H
-			if (!Notes[3].empty()) {
-				if (Notes[3][0].y >= 916 - (Speed / 100) && Notes[3][0].y <= 956 + (Speed / 100)) {
-					Great(3,Notes[3][0].NotesColor);
-					Linedelete(3);
-				}
-				else if (Notes[3][0].y >= 896.0 - (Speed / 100) && Notes[3][0].y <= 976.0 + (Speed / 100)) {
-					Ok(3);
-					Linedelete(3);
-				}
-				else if (Notes[3][0].y >= 876.0 - (Speed / 100) && Notes[3][0].y <= 996.0 + (Speed / 100)) {
-					Bad(3);
-					Linedelete(3);
-				}
-			}
-		}
+		if (Keyboard::GetKey(KEY_INPUT_M) == 1) Judgement(3);
 	}
-	else if (Notes[3][0].NotesColor == 2) {
-		if (Keyboard::GetKey(KEY_INPUT_J) == 1) { //H
-			if (!Notes[3].empty()) {
-				if (Notes[3][0].y >= 916 - (Speed / 100) && Notes[3][0].y <= 956 + (Speed / 100)) {
-					Great(3,Notes[3][0].NotesColor);
-					Linedelete(3);
-				}
-				else if (Notes[3][0].y >= 896.0 - (Speed / 100) && Notes[3][0].y <= 976.0 + (Speed / 100)) {
-					Ok(3);
-					Linedelete(3);
-				}
-				else if (Notes[3][0].y >= 876.0 - (Speed / 100) && Notes[3][0].y <= 996.0 + (Speed / 100)) {
-					Bad(3);
-					Linedelete(3);
-				}
-			}
-		}
+	if (Notes[3][0].NotesColor == 2) {
+		if (Keyboard::GetKey(KEY_INPUT_J) == 1) Judgement(3);
 	}
-	else if (Notes[3][0].NotesColor == 3) {
-		if (Keyboard::GetKey(KEY_INPUT_U) == 1) { //H
-			if (!Notes[3].empty()) {
-				if (Notes[3][0].y >= 916 - (Speed / 100) && Notes[3][0].y <= 956 + (Speed / 100)) {
-					Great(3,Notes[3][0].NotesColor);
-					Linedelete(3);
-				}
-				else if (Notes[3][0].y >= 896.0 - (Speed / 100) && Notes[3][0].y <= 976.0 + (Speed / 100)) {
-					Ok(3);
-					Linedelete(3);
-				}
-				else if (Notes[3][0].y >= 876.0 - (Speed / 100) && Notes[3][0].y <= 996.0 + (Speed / 100)) {
-					Bad(3);
-					Linedelete(3);
-				}
-			}
-		}
+	if (Notes[3][0].NotesColor == 3) {
+		if (Keyboard::GetKey(KEY_INPUT_U) == 1) Judgement(3);
 	}
-	else if (Notes[3][0].NotesColor == 4) {
-		if (CheckHitKey(KEY_INPUT_M) == 1) { //F
-			if (!Notes[0].empty()) {
-				if (Notes[3][0].y >= 916.0 - (Speed / 100) && Notes[3][0].y <= 956.0 + (Speed / 100)) {
-					Great(3,Notes[3][0].NotesColor);
-					Linedelete(3);
-				}
-			}
-		}
+	if (Notes[3][0].NotesColor == 4) {
+		if (CheckHitKey(KEY_INPUT_M) == 1) LongJudgement(3);
 	}
-	else if (Notes[3][0].NotesColor == 5) {
-		if (CheckHitKey(KEY_INPUT_J) == 1) { //F
-			if (!Notes[0].empty()) {
-				if (Notes[3][0].y >= 916.0 - (Speed / 100) && Notes[3][0].y <= 956.0 + (Speed / 100)) {
-					Great(3,Notes[3][0].NotesColor);
-					Linedelete(3);
-				}
-			}
-		}
+	if (Notes[3][0].NotesColor == 5) {
+		if (CheckHitKey(KEY_INPUT_J) == 1) LongJudgement(3);
 	}
-	else if (Notes[3][0].NotesColor == 6) {
-		if (CheckHitKey(KEY_INPUT_U) == 1) { //F
-			if (!Notes[0].empty()) {
-				if (Notes[3][0].y >= 916.0 - (Speed / 100) && Notes[3][0].y <= 956.0 + (Speed / 100)) {
-					Great(3,Notes[3][0].NotesColor);
-					Linedelete(3);
-				}
-			}
-		}
+	if (Notes[3][0].NotesColor == 6) {
+		if (CheckHitKey(KEY_INPUT_U) == 1) LongJudgement(3);
 	}
 
 
 	//通り過ぎた後の処理
 	for (int i = 0, n = (signed)Notes.size(); i < n; i++) {
-		if (!Notes[i].empty()) {								//ノーツがあるとき
-			
-			if (Notes[i][0].y > 1000 && Notes[i].size() > 1) {
-				//Notes.clear();
-				Linedelete(i);
-				if (i < 4) {
-					bad_count++;
-					combo = 0;
-					if (Notes[i][0].NotesColor >= 4) {
-						gaugecount += 1;
-					}
-					else {
-						gaugecount += 7;
-					}
-				}
-				if (gaugecount > 0) {
-					gaugecount = 0;
-				}
-				if (gaugecount < -500) {
-					gaugecount = -500;
-				}
+		if (!Notes[i].empty() == false) { continue; }    //ノーツがあるとき
+
+		if (Notes[i][0].y > 1000 && Notes[i].size() > 1) {
+
+			Linedelete(i);  //ノーツを削除
+
+			if (i < LANE == false) { continue; }
+			bad_count++;
+			combo = 0;
+			if (Notes[i][0].NotesColor >= 4) {
+				gaugecount += 1;
+			}
+			else {
+				gaugecount += 7;
 			}
 		}
-	}
 
+		//ゲージはみ出し防止
+		if (gaugecount > 0) {
+			gaugecount = 0;
+		}
+		if (gaugecount < -500) {
+			gaugecount = -500;
+		}
+	}
+		
+	
 	combocount--;
 
-	score[CSelectNum][DSelectNum] = (((great_count) + (ok_count / 2))) * 1000000 / notescount;
+	//スコアを判定の数から算出(満点は1000000)
+	score[CSelectNum][DSelectNum] = ((great_count) + (ok_count / 2)) * 1000000 / notescount;
 
 	//5レーン目のエフェクトなど
 	if (Notes[4][0].y > 936) {
@@ -601,7 +390,7 @@ void Game::Update() {
 			break;
 		case 2:
 			if (end_flag == false) {
-				StopSoundMem(Music[1]);
+				StopSoundMem(Music[CSelectNum]);
 				end_flag = true;
 			}
 			break;
@@ -628,51 +417,43 @@ void Game::Update() {
 }
 
 
-//描画
+//描画--------------------------------------------------------------------------
 void Game::Draw() {
 	BaseScene::Draw();  //親クラスの描画メソッドを呼ぶ
-	DrawString(465, 10, "ゲーム画面", GetColor(255, 255, 255));
+	//DrawString(465, 10, "ゲーム画面", GetColor(255, 255, 255));
 
 	DrawRotaGraph(825, 540, 1.0, 0.0, Otherimg[0], TRUE);
+
 	tennmetu++;
 	if (tennmetu % 3 == 1) {
 		DrawRotaGraph(825, 965, 1.0, 0.0, Otherimg[1], TRUE);
 	}
 
-	if (CheckHitKey(KEY_INPUT_V) != 0 || CheckHitKey(KEY_INPUT_F) != 0 || CheckHitKey(KEY_INPUT_R) != 0) {
-		keyrightcount[0] = 255;
-		SetDrawBlendMode(DX_BLENDMODE_ALPHA, keyrightcount[0]);
-		DrawRotaGraph3(674 + 76 * 0, 756, 0, 0, 1.0, 1.0, 0.0, Otherimg[3], TRUE);
-		SetDrawBlendMode(DX_BLENDMODE_ALPHA, 255);
-	}
-	if (CheckHitKey(KEY_INPUT_B) != 0 || CheckHitKey(KEY_INPUT_G) != 0 || CheckHitKey(KEY_INPUT_T) != 0) {
-		keyrightcount[1] = 255;
-		SetDrawBlendMode(DX_BLENDMODE_ALPHA, keyrightcount[1]);
-		DrawRotaGraph3(674 + 76 * 1, 756, 0, 0, 1.0, 1.0, 0.0, Otherimg[3], TRUE);
-		SetDrawBlendMode(DX_BLENDMODE_ALPHA, 255);
-	}
-	if (CheckHitKey(KEY_INPUT_N) != 0 || CheckHitKey(KEY_INPUT_H) != 0 || CheckHitKey(KEY_INPUT_Y) != 0) {
-		keyrightcount[2] = 255;
-		SetDrawBlendMode(DX_BLENDMODE_ALPHA, keyrightcount[2]);
-		DrawRotaGraph3(674 + 76 * 2, 756, 0, 0, 1.0, 1.0, 0.0, Otherimg[3], TRUE);
-		SetDrawBlendMode(DX_BLENDMODE_ALPHA, 255);
-	}
-	if (CheckHitKey(KEY_INPUT_M) != 0 || CheckHitKey(KEY_INPUT_J) != 0 || CheckHitKey(KEY_INPUT_U) != 0) {
-		keyrightcount[3] = 255;
-		SetDrawBlendMode(DX_BLENDMODE_ALPHA, keyrightcount[3]);
-		DrawRotaGraph3(674 + 76 * 3, 756, 0, 0, 1.0, 1.0, 0.0, Otherimg[3], TRUE);
-		SetDrawBlendMode(DX_BLENDMODE_ALPHA, 255);
-	}
+	//キーのライトをレーンごとに表示
+	if (CheckHitKey(KEY_INPUT_V) != 0 || CheckHitKey(KEY_INPUT_F) != 0 || CheckHitKey(KEY_INPUT_R) != 0) KeyRight(0);
+	if (CheckHitKey(KEY_INPUT_B) != 0 || CheckHitKey(KEY_INPUT_G) != 0 || CheckHitKey(KEY_INPUT_T) != 0) KeyRight(1);
+	if (CheckHitKey(KEY_INPUT_N) != 0 || CheckHitKey(KEY_INPUT_H) != 0 || CheckHitKey(KEY_INPUT_Y) != 0) KeyRight(2);
+	if (CheckHitKey(KEY_INPUT_M) != 0 || CheckHitKey(KEY_INPUT_J) != 0 || CheckHitKey(KEY_INPUT_U) != 0) KeyRight(3);
 	
 
 	DrawRotaGraph(1500, 600, 0.4, 0.0, Otherimg[9], TRUE);
+	DrawRotaGraph3(1600, 850, 0, 0, 0.1, 0.05, 0.0, Otherimg[9], TRUE);
+	DrawRotaGraph3(0, 350, 0, 0, 0.5, 0.05, 0.0, Otherimg[9], TRUE);
+
+	//ジャケット、タイトル、BPM、現在のスコアを表示
 	DrawRotaGraph(1500, 600, 0.3, 0.0, Jacketimg[CSelectNum], TRUE);
+	SelectTitle[CSelectNum].Draw();
+	DrawString(1625, 840, "BPM", GetColor(255, 120, 255));
+	DrawFormatString(1640, 870, 0xffffff, "%d", SelectTitle[CSelectNum].bpm);
+	DrawString(50, 345, "SCORE", GetColor(50, 50, 200));
+	DrawFormatString(440, 370, 0xff00ff, "%d", score[CSelectNum][DSelectNum]);
+	
 
 	DrawRotaGraph(825, 955, 1.0, 0.0, Otherimg[1], TRUE);
 	DrawRotaGraph(825, 916, 1.0, 0.0, Otherimg[2], TRUE); //判定線はy936
 	DrawRotaGraph(825, 956, 1.0, 0.0, Otherimg[2], TRUE);
 
-
+	//クリア判定の色彩変更
 	if (gaugecount <= -350) {
 		DrawExtendGraph(1110, 340 + 500 + gaugecount, 1110 + 20, 840, Otherimg[5], TRUE);    //最長500
 	}
@@ -680,6 +461,7 @@ void Game::Draw() {
 		DrawExtendGraph(1110, 340 + 500 + gaugecount, 1110 + 20, 840, Otherimg[4], TRUE);    //最長500
 	}
 	
+	//ゲージケース
 	DrawExtendGraph(1100, 100, 1100 + 40, 100 + 750, Otherimg[6], TRUE);
 	DrawLine(1110, 490, 1130, 490, 0xff0000, true);
 
@@ -688,6 +470,8 @@ void Game::Draw() {
 	DrawRotaGraph3(1120, -200, 0, 0, 1.0, 1.0, 0.0, Otherimg[7], TRUE);
 
 	if (tennmetu % 2 == 1) {
+
+		//待機コメントを表示
 		if (starttime > 0) {
 			if (starttime < 150) {
 				DrawString(775, 800, "READY...", GetColor(120, 120, 255));
@@ -697,6 +481,7 @@ void Game::Draw() {
 			}
 		}
 
+		//曲終了時にクリアか否か表示
 		if (endtime > 0 && end_flag == true) {
 			if (endtime < 200) {
 				if (clear_flag[CSelectNum][DSelectNum] == 1) {
@@ -709,46 +494,54 @@ void Game::Draw() {
 		}	
 	}
 
-	
+	//線
+	if (starttime == 0) {
+		linedowner += Speed * (difference * 0.000001);
+		for (int i = 0; i < BPM * 4; i++) {
+			if (i % 4 == 0) {
+				DrawLine(0 + 650, -i * (Speed * (60.0 / BPM)) * 4 + linedowner, 1920 - 900, -i * (Speed * (60.0 / BPM)) * 4 + linedowner, 0x505050, true);
 
-	// -Y_num * Speed * ((60.0 / BPM) / (Beat / 4))
-	for (int j = 0, k = Notes.size() - 1; j < k; j++) {
-		if(!Notes[j].empty()){
-			for (int i = 0, n = (signed)Notes[j].size() - 1; i < n; i++) {
-				if (Notes[j][i].y > 0) { //画面内にある時
-					switch (Notes[j][i].NotesColor) {
-					case 0:
-						
-						break;
-					case 1:
-						//DrawGraph(Notes[j][i].x, Notes[j][i].y, Notesimg[0], true);        リファレンスによって座標が違う
-						//DrawRotaGraph(Notes[j][i].x, Notes[j][i].y, 1.0, 0.0, Notesimg[0], TRUE);
-						DrawRotaGraph3(Notes[j][i].x, Notes[j][i].y - 7, 0, 0, 1.0, 1.0, 0.0, Notesimg[0], FALSE);
-						break;
-					case 2:
-						DrawRotaGraph3(Notes[j][i].x, Notes[j][i].y - 7, 0, 0, 1.0, 1.0, 0.0, Notesimg[1], FALSE);
-						break;
-					case 3:
-						DrawRotaGraph3(Notes[j][i].x, Notes[j][i].y - 7, 0, 0, 1.0, 1.0, 0.0, Notesimg[2], FALSE);
-						break;
-					case 4:
-						DrawRotaGraph3(Notes[j][i].x, Notes[j][i].y - 7, 0, 0, 1.0, 1.0 * Speed * ((60.0 / BPM) / (Beat / 4)), 0.0, Notesimg[3], FALSE);
-						break;
-					case 5:
-						DrawRotaGraph3(Notes[j][i].x, Notes[j][i].y - 7, 0, 0, 1.0, 1.0 * Speed * ((60.0 / BPM) / (Beat / 4)), 0.0, Notesimg[4], FALSE);
-						break;
-					case 6:
-						DrawRotaGraph3(Notes[j][i].x, Notes[j][i].y - 7, 0, 0, 1.0, 1.0 * Speed * ((60.0 / BPM) / (Beat / 4)), 0.0, Notesimg[5], FALSE);
-						break;
-					default:
-
-						break;
-					}
-				}
 			}
 		}
 	}
 
+	//ノーツの情報を基に種類ごとに表示
+	for (int j = 0, k = Notes.size() - 1; j < k; j++) {
+		if (!Notes[j].empty() == false) {continue;}
+		for (int i = 0, n = (signed)Notes[j].size() - 1; i < n; i++) {
+			if (Notes[j][i].y > 0) { //画面内にある時
+				switch (Notes[j][i].NotesColor) {
+				case 0:
+
+					break;
+				case 1:
+					DrawNotes(j, i, 0);
+					break;
+				case 2:
+					DrawNotes(j, i, 1);
+					break;
+				case 3:
+					DrawNotes(j, i, 2);
+					break;
+				case 4:
+					DrawRotaGraph3(Notes[j][i].x, Notes[j][i].y - 7, 0, 0, 1.0, 1.0 * Speed * ((60.0 / BPM) / (Beat / 4)), 0.0, Notesimg[3], FALSE);
+					break;
+				case 5:
+					DrawRotaGraph3(Notes[j][i].x, Notes[j][i].y - 7, 0, 0, 1.0, 1.0 * Speed * ((60.0 / BPM) / (Beat / 4)), 0.0, Notesimg[4], FALSE);
+					break;
+				case 6:
+					DrawRotaGraph3(Notes[j][i].x, Notes[j][i].y - 7, 0, 0, 1.0, 1.0 * Speed * ((60.0 / BPM) / (Beat / 4)), 0.0, Notesimg[5], FALSE);
+					break;
+				default:
+
+					break;
+				}
+			}
+		}
+
+	}
+
+	//背景の照明
 	if (rightcount < 255) {
 		SetDrawBlendMode(DX_BLENDMODE_ALPHA, rightcount);
 		DrawRotaGraph3(0, -200, 0, 0, 1.0, 1.0, 0.0, Otherimg[8], TRUE);
@@ -756,8 +549,9 @@ void Game::Draw() {
 		SetDrawBlendMode(DX_BLENDMODE_ALPHA, 255);
 	}
 	
-	if (tennmetu % 2 == 1) {
-		for (int i = 0; i < 4; i++) {
+	//判定を表示
+	if (tennmetu % 2 == 1) {    //点滅
+		for (int i = 0; i < LANE; i++) {
 			if (judge_great[i] > 0) {
 				DrawString(670 + 76 * i, 750, "GREAT", GetColor(120, 120, 255));
 			}
@@ -773,13 +567,6 @@ void Game::Draw() {
 		}
 	}
 
-	SetFontSize(32);
-	if (counter < 255)
-	{
-		SetDrawBlendMode(DX_BLENDMODE_ALPHA, 255 - counter);
-		DrawBox(0, 0, 1920, 1080, 0x000000, true);
-		SetDrawBlendMode(DX_BLENDMODE_ALPHA, 255);
-	}
-
-
+	
+	Fadeout();
 }
